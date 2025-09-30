@@ -1,42 +1,43 @@
-// setup.. this is similar to when we use our default tags in html
 const express = require("express")
-// we have to use cors to host a front end and a backend on the same device
+const Song = require("./models/song");
 var cors = require('cors')
-// activate or tell app varibale to be an express server
-const app = express()
+
+const app = express();
+app.use(express.json())
 app.use(cors())
-const router = express.Router()
 
+// middleware that parses HTTP request with JSON body
+const router = express.Router();
 
-// start the web server... app.listen(portnumber, function)
-
-// making an api using routes
-// routes are used to handle browser request. They look like URL's. difference is when a browser requests a route it is dynamicaly handles using a function
-
-// GET or a regular request when someone goes to https://localhost:3000/hello. when using a function in a route, we almost always have a parameter or handle a response or request
-
-router.get("/song", function(req,res){
-    const songs = [
-        {
-            title: "We found love",
-            artist: "Rihanna",
-            popularity: 10,
-            releaseDate: new Date(2011, 9, 22),
-            genre: ["electro house"]
-        },
-        {
-            title: "Happy",
-            artist: "Pharrell Williams",
-            popularity: 10,
-            releaseDate: new Date(2013, 11, 21),
-            genre: ["soul", "new soul"]
-        }   
-    ];
-
-
-    res.json(songs)
+// GET /songs?genre=Rock
+router.get("/songs", async(req,res) =>{
+    try{
+        const songs = await Song.find({})
+        res.send(songs)
+        console.log(songs)
+    }
+    catch (err){
+        console.log(err)
+    }
 })
 
-// all request that use an api start with a api.. url would be localhost:3000/api/songs
+router.post("/songs", async(req,res) =>{
+    try{
+        const song = await new Song(req.body)
+        await song.save()
+        res.status(201).json(song)
+        console.log(song)
+    }
+    catch(err){
+        res.status(400).send(err)
+
+    }
+
+
+})
+
 app.use("/api", router)
-app.listen(3000)
+
+app.listen(3000, () => console.log("Listening on http://localhost:3000"));
+
+

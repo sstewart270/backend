@@ -1,10 +1,24 @@
 const express = require("express");
-const Song = require("./models/song");
 const cors = require("cors");
 
+// 1) ensure DB connects at startup (uses db.js)
+const db = require("./db");
+
+const Song = require("./models/song");
+
 const app = express();
-app.use(express.json());
 app.use(cors());
+app.use(express.json());
+
+// Optional: friendly root + health check
+app.get("/", (req, res) => {
+  res.send("Song API is running. Try GET /api/songs");
+});
+
+app.get("/api/health", (req, res) => {
+  // mongoose readyState: 0=disconnected, 1=connected, 2=connecting, 3=disconnecting
+  res.json({ ok: true, db: db.connection.readyState });
+});
 
 // routes
 const router = express.Router();
@@ -16,6 +30,7 @@ router.get("/songs", async (req, res) => {
     res.json(songs);
   } catch (err) {
     console.error(err);
+    // if you need more detail while debugging, use err.message
     res.status(500).send("Server error");
   }
 });
@@ -54,6 +69,7 @@ router.put("/songs/:id", async (req, res) => {
 
 app.use("/api", router);
 
+// Render-compatible port
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
   console.log(`Listening on port ${PORT}`);
